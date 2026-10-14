@@ -1,6 +1,6 @@
 import { CommonModule, registerLocaleData } from '@angular/common';
 import localeEsCo from '@angular/common/locales/es-CO';
-import { Component, OnInit, inject } from '@angular/core';
+import { ChangeDetectorRef, Component, OnInit, inject } from '@angular/core';
 import {
   FormControl,
   FormGroup,
@@ -30,6 +30,7 @@ registerLocaleData(localeEsCo);
 export class AppComponent implements OnInit {
 
   private readonly api = inject(BankingApiService);
+  private readonly changeDetector = inject(ChangeDetectorRef);
 
   accounts: Account[] = [];
   transactions: Transaction[] = [];
@@ -107,7 +108,10 @@ export class AppComponent implements OnInit {
     this.loadingAccounts = true;
 
     this.api.getAccounts()
-      .pipe(finalize(() => this.loadingAccounts = false))
+      .pipe(finalize(() => {
+        this.loadingAccounts = false;
+        this.changeDetector.markForCheck();
+      }))
       .subscribe({
         next: accounts => {
           this.accounts = accounts;
@@ -125,7 +129,10 @@ export class AppComponent implements OnInit {
     this.loadingTransactions = true;
 
     this.api.getTransactions()
-      .pipe(finalize(() => this.loadingTransactions = false))
+      .pipe(finalize(() => {
+        this.loadingTransactions = false;
+        this.changeDetector.markForCheck();
+      }))
       .subscribe({
         next: transactions => {
           this.transactions = [...transactions].sort(
@@ -193,7 +200,10 @@ export class AppComponent implements OnInit {
     this.submitting = true;
 
     this.api.createTransaction(request)
-      .pipe(finalize(() => this.submitting = false))
+      .pipe(finalize(() => {
+        this.submitting = false;
+        this.changeDetector.markForCheck();
+      }))
       .subscribe({
         next: transaction => {
           this.successMessage =
@@ -240,7 +250,10 @@ export class AppComponent implements OnInit {
     this.searching = true;
 
     this.api.getTransactionByReference(reference)
-      .pipe(finalize(() => this.searching = false))
+      .pipe(finalize(() => {
+        this.searching = false;
+        this.changeDetector.markForCheck();
+      }))
       .subscribe({
         next: transaction => {
           this.selectedTransaction = transaction;
@@ -261,7 +274,10 @@ export class AppComponent implements OnInit {
     this.selectedTransaction = transaction;
 
     this.api.getTransactionByReference(transaction.requestReference)
-      .pipe(finalize(() => this.loadingTransactionDetail = false))
+      .pipe(finalize(() => {
+        this.loadingTransactionDetail = false;
+        this.changeDetector.markForCheck();
+      }))
       .subscribe({
         next: detail => {
           this.selectedTransaction = detail;
