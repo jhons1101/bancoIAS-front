@@ -28,3 +28,5 @@ Después de ello, ir al sitio web.
 ```bash
 http://localhost:4200
 ```
+
+Una vez que el servidor esté en funcionamiento, La aplicación requiere que esté desplegado el Backend local, las solicitudes a la API serán dirigidas a `http://localhost:8080`. Asegúrate de que el backend se ejecute en el **puerto 8080**. Esto evita las restricciones CORS del navegador para el desarrollo local.
