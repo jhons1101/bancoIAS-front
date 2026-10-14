@@ -1,0 +1,76 @@
+<div
+  *ngIf="open"
+  class="modal-backdrop"
+  (click)="closeOnBackdrop($event)">
+  <section
+    class="modal"
+    role="dialog"
+    aria-modal="true"
+    aria-labelledby="transaction-detail-title">
+    <header class="modal-header">
+      <div>
+        <p class="eyebrow">Detalle de la transferencia</p>
+        <h2 id="transaction-detail-title">Información de la operación</h2>
+      </div>
+      <button
+        type="button"
+        class="close-button"
+        aria-label="Cerrar detalle"
+        (click)="closed.emit()">
+        &times;
+      </button>
+    </header>
+
+    <p *ngIf="loading && !transaction" class="message" role="status">
+      Cargando información de la transferencia...
+    </p>
+
+    <p *ngIf="error" class="message error" role="alert">
+      {{ error }}
+    </p>
+
+    <dl *ngIf="transaction as tx" class="detail-grid">
+      <div class="detail-item">
+        <dt>Referencia</dt>
+        <dd>{{ tx.requestReference }}</dd>
+      </div>
+      <div class="detail-item">
+        <dt>Cuenta origen</dt>
+        <dd>{{ tx.sourceAccountId }}</dd>
+      </div>
+      <div class="detail-item">
+        <dt>Cuenta destino</dt>
+        <dd>{{ tx.destinationAccountId }}</dd>
+      </div>
+      <div class="detail-item">
+        <dt>Importe</dt>
+        <dd>{{ tx.amount | currency:'COP':'symbol':'1.0-2':'es-CO' }}</dd>
+      </div>
+      <div class="detail-item">
+        <dt>Estado</dt>
+        <dd>
+          <span
+            class="status-pill"
+            [class.processed]="tx.status === 'PROCESSED'"
+            [class.rejected]="tx.status === 'REJECTED'">
+            {{ getStatusLabel(tx.status) }}
+          </span>
+        </dd>
+      </div>
+      <div class="detail-item">
+        <dt>Fecha</dt>
+        <dd>{{ tx.processedAt | date:'yyyy-MM-dd HH:mm:ss' }}</dd>
+      </div>
+      <div class="detail-item reason-item">
+        <dt>Motivo</dt>
+        <dd>{{ tx.reason || 'Sin motivo informado.' }}</dd>
+      </div>
+    </dl>
+
+    <footer class="modal-footer">
+      <button type="button" class="close-action" (click)="closed.emit()">
+        Cerrar
+      </button>
+    </footer>
+  </section>
+</div>

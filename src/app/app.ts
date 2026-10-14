@@ -1,4 +1,5 @@
-import { CommonModule } from '@angular/common';
+import { CommonModule, registerLocaleData } from '@angular/common';
+import localeEsCo from '@angular/common/locales/es-CO';
 import { Component, OnInit, inject } from '@angular/core';
 import {
   FormControl,
@@ -15,11 +16,14 @@ import {
   CreateTransactionRequest
 } from './models/transaction.model';
 import { BankingApiService } from './services/banking-api.service';
+import { TransactionDetailModalComponent } from './transaction-detail-modal/transaction-detail-modal';
+
+registerLocaleData(localeEsCo);
 
 @Component({
   selector: 'app-root',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule],
+  imports: [CommonModule, ReactiveFormsModule, TransactionDetailModalComponent],
   templateUrl: './app.html',
   styleUrl: './app.css'
 })
@@ -31,6 +35,9 @@ export class AppComponent implements OnInit {
   transactions: Transaction[] = [];
 
   selectedTransaction: Transaction | null = null;
+  transactionDetailOpen = false;
+  loadingTransactionDetail = false;
+  transactionDetailError = '';
 
   loadingAccounts = false;
   loadingTransactions = false;
@@ -74,7 +81,8 @@ export class AppComponent implements OnInit {
 
   ngOnInit(): void {
     this.loadAccounts();
-    this.loadTransactions();
+    this.refreshTransactionHistory();
+    this.searchTransaction();
   }
 
   get activeAccounts(): Account[] {
@@ -113,7 +121,7 @@ export class AppComponent implements OnInit {
       });
   }
 
-  loadTransactions(): void {
+  refreshTransactionHistory(): void {
     this.loadingTransactions = true;
 
     this.api.getTransactions()
@@ -200,7 +208,7 @@ export class AppComponent implements OnInit {
             amount: null
           });
 
-          this.loadTransactions();
+          this.refreshTransactionHistory();
           this.loadAccounts();
         },
         error: error => {
@@ -211,7 +219,7 @@ export class AppComponent implements OnInit {
 
           // Recargar por si el servidor guardó un rechazo
           // pero respondió con un estado HTTP de error.
-          this.loadTransactions();
+          this.refreshTransactionHistory();
           this.loadAccounts();
         }
       });
@@ -246,6 +254,33 @@ export class AppComponent implements OnInit {
       });
   }
 
+  openTransactionDetail(transaction: Transaction): void {
+    this.transactionDetailOpen = true;
+    this.loadingTransactionDetail = true;
+    this.transactionDetailError = '';
+    this.selectedTransaction = transaction;
+
+    this.api.getTransactionByReference(transaction.requestReference)
+      .pipe(finalize(() => this.loadingTransactionDetail = false))
+      .subscribe({
+        next: detail => {
+          this.selectedTransaction = detail;
+        },
+        error: error => {
+          this.transactionDetailError = this.getErrorMessage(
+            error,
+            `No se encontró la transferencia ${transaction.requestReference}.`
+          );
+        }
+      });
+  }
+
+  closeTransactionDetail(): void {
+    this.transactionDetailOpen = false;
+    this.selectedTransaction = null;
+    this.transactionDetailError = '';
+  }
+
   clearSearch(): void {
     this.searchForm.reset({ reference: '' });
     this.selectedTransaction = null;
@@ -256,7 +291,7 @@ export class AppComponent implements OnInit {
     this.successMessage = '';
     this.errorMessage = '';
     this.loadAccounts();
-    this.loadTransactions();
+    this.refreshTransactionHistory();
   }
 
   getStatusLabel(status: string): string {

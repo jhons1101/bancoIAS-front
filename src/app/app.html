@@ -1,4 +1,12 @@
 <div class="app-shell">
+  <app-transaction-detail-modal
+    [open]="transactionDetailOpen"
+    [transaction]="selectedTransaction"
+    [loading]="loadingTransactionDetail"
+    [error]="transactionDetailError"
+    (closed)="closeTransactionDetail()">
+  </app-transaction-detail-modal>
+
   <header class="topbar">
     <div class="brand">
       <div class="brand-icon">B</div>
@@ -53,13 +61,9 @@
             </span>
           </div>
 
-          <p class="muted">Cliente {{ account.customerId }}</p>
+          <p class="muted">Cliente: {{ account.customerId }}</p>
 
-          <div class="balance">
-            {{ account.balance | currency:'COP':'symbol':'1.0-2':'es-CO' }}
-          </div>
-
-          <p class="muted">Saldo registrado</p>
+          <p class="muted">Saldo registrado: {{ account.balance | currency:'COP':'symbol':'1.0-2':'es-CO' }}</p>
         </article>
 
         <p *ngIf="accounts.length === 0" class="empty-state">
@@ -195,7 +199,7 @@
       </form>
     </section>
 
-    <!-- Consultar por referencia -->
+    <!-- Consultar transferencia -->
     <section class="section panel">
       <div class="section-heading">
         <div>
@@ -294,8 +298,9 @@
         <button
           type="button"
           class="button button-secondary"
-          (click)="loadTransactions()">
-          Actualizar historial
+          [disabled]="loadingTransactions"
+          (click)="refreshTransactionHistory()">
+          {{ loadingTransactions ? 'Actualizando...' : 'Actualizar historial' }}
         </button>
       </div>
 
@@ -313,7 +318,6 @@
               <th class="align-right">Importe</th>
               <th>Estado</th>
               <th>Fecha</th>
-              <th>Motivo</th>
               <th></th>
             </tr>
           </thead>
@@ -341,15 +345,11 @@
                 {{ tx.processedAt | date:'yyyy-MM-dd HH:mm:ss' }}
               </td>
 
-              <td class="reason-cell">
-                {{ tx.reason || '—' }}
-              </td>
-
               <td>
                 <button
                   type="button"
                   class="link-button"
-                  (click)="searchForm.controls.reference.setValue(tx.requestReference); searchTransaction()">
+                  (click)="openTransactionDetail(tx)">
                   Ver
                 </button>
               </td>
